@@ -1,9 +1,12 @@
 from struct import unpack, pack
+from enum import Enum
 
+class Attributes(Enum):
+    EMPTY = b'\x00'
+    FILE = b'\x01'
+    FOLDER = b'\x02'
 
 class Entry:
-    # 1 bytes
-    IsUsed: bytes
     # n bytes
     Name: bytes
     # 1
@@ -19,20 +22,18 @@ class Entry:
         pass
         # TODO: get file content
 
-    def new(self, IsUsed: bytes, Name: bytes, Attributes: bytes, FirstCluster: int, Nonce: bytes, ContentSize: int) -> None:
-        self.isUsed = IsUsed
+    def new(self, Name: bytes, Attributes: bytes, FirstCluster: int, ContentSize: int) -> None:
         self.Name = Name
         self.Attributes = Attributes
         self.FirstCluster = FirstCluster
-        self.Nonce = Nonce
+        self.Nonce = b'\x00'*16
         self.ContentSize = ContentSize
 
         # Create new entry
 
     def dump(self) -> bytes:
         return pack(
-            "=1s38s1sI16sI",
-            self.IsUsed,
+            "=39s1sI16sI",
             self.Name,
             self.Attributes,
             self.FirstCluster,
@@ -43,13 +44,12 @@ class Entry:
 
     def parse(self, buffer) -> None:
         (
-            self.IsUsed,
             self.Name,
             self.Attributes,
             self.FirstCluster,
             self.Nonce,
             self.ContentSize
-        ) = unpack("=1s38s1sI16sI", buffer)
+        ) = unpack("=39s1sI16sI", buffer)
         # parse 64 bytes input to entry data
 
 # Entry size 64 bytes
