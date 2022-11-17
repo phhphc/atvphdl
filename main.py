@@ -12,5 +12,7 @@ def main():
     for _ in range(3):
         print(next(volume.file_table.empty_cluster()))
 
+    volume.import_file(bytes('abc.txt','utf-8'))
+
 if __name__ == '__main__':
     main()

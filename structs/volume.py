@@ -2,6 +2,7 @@ from structs.boot_sector import *
 from structs.file_table import *
 from structs.entry import *
 from structs.data import *
+import os
 
 
 class Volume:
@@ -33,9 +34,9 @@ class Volume:
         self.file_table.format()
 
         data_offset = reserved_byte + bytes_per_fat
-        data_size = total_sector * self.BytesPerSector - data_offset
+        self.data_size = total_sector * self.boot_sector.BytesPerSector - data_offset
         self.data = Data(
-            f, data_offset, data_size, self.boot_sector.BytesPerSector, self.boot_sector.SectorsPerCluster
+            f, data_offset, self.data_size, self.boot_sector.BytesPerSector, self.boot_sector.SectorsPerCluster
         )
 
 
@@ -46,11 +47,27 @@ class Volume:
 
         # create new entry
         entry = Entry()
-        file_size = 123
+        file_stats = os.stat(filename)
+        file_size = file_stats.st_size
         entry.new(filename, Attributes.FILE, empty_cluster, file_size)
 
         # save entry root folder
-        entry.dump()
+        newEntry = entry.dump()
+        
+        i = 0
+        j=0
+        while (i<self.data_size):
+            curSector = self.data.getSector(i)
+            check = False
+            while (j<i):
+                curEntry = curSector.getEntry(j)
+                if (curEntry.Attributes == Attributes.EMPTY):
+                    curSector.setEntry(j, newEntry)
+                    check = True
+                    break
+                j+=64
+            i+=self.boot_sector.BytesPerSector
+            if (check == True): break
 
         # copy content to cluster
         pass

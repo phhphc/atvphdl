@@ -1,3 +1,5 @@
+from structs.entry import *
+from structs.sector import *
 
 class Data:
 
@@ -7,5 +9,12 @@ class Data:
         self.size = size 
         self.bytes_per_sector = bytes_per_sector
         self.sectors_per_cluster = sectors_per_cluster
+        self.sectorList = []
+        for i in range (0, int(size / bytes_per_sector)):
+            sector = Sector(bytes_per_sector)
+            self.sectorList.append(sector)
+    
+    def getSector(self, i):
+        return self.sectorList[i/self.bytes_per_sector]
 
-    def ahnfw()
+
