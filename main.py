@@ -1,16 +1,14 @@
-from structs.boot_sector import *
-from structs.file_table import *
-from structs.volume import *
+from shell import Shell
 
-File_Name = "MyDir.DRS"
-File_Size = 100_000
+shell = Shell()
 
-def main():
-    volume = Volume()
-    volume.new(File_Name, File_Size)
+while True:
+    option = input("select mode: 1.open 2.create (1/2 ?)")
+    if option == "1":
+        shell.open()
+        break
+    if option == "2":
+        shell.new()
+        break
 
-    for _ in range(3):
-        print(next(volume.file_table.empty_cluster()))
-
-if __name__ == '__main__':
-    main()
+shell.serve()

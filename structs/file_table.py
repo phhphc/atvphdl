@@ -1,8 +1,11 @@
 
-END_INDEX = 0xffffffff
 
 
 class FileTable:
+    END_INDEX = 0xffffffff
+    ROOT_DIR_FIRST_CLUSTER = 0x00000000
+    DELE_DIR_FIRST_CLUSTER = 0x00000001
+    EMPTY_CLUSTER_HEAD = 0x00000002
 
     def __init__(self, f, offset: int, size: int, bytes_per_sector: int):
         self.io = f
@@ -15,22 +18,30 @@ class FileTable:
         # TODO: get cluster list of a file
 
     def empty_cluster(self):
-        val = self.read_index(3)
-        if val == END_INDEX:
+        val = self.read_index(FileTable.EMPTY_CLUSTER_HEAD)
+        if val == FileTable.END_INDEX:
             return
 
-        self.update_index(3, self.read_index(val))
-        self.update_index(val, END_INDEX)
+        self.update_index(FileTable.EMPTY_CLUSTER_HEAD, self.read_index(val))
+        self.update_index(val, FileTable.END_INDEX)
         yield val
+    
+    def append_cluster_list(self, pre_cluster:int):
+        if self.read_index(pre_cluster) != FileTable.END_INDEX:
+            raise IndexError("pre_cluster index must be END_INDEX")
+        
+        new_cluster = next(self.empty_cluster())
+        self.update_index(pre_cluster, new_cluster)
+        return new_cluster
 
     def format(self):
         self.io.seek(self.offset)
-        self.io.write(END_INDEX.to_bytes(4, 'little') * 2)
+        self.io.write(FileTable.END_INDEX.to_bytes(4, 'little') * 2)
 
         for i in range(3, self.size // 4):
             self.io.write(i.to_bytes(4, 'little'))
 
-        self.io.write(END_INDEX.to_bytes(4, 'little'))
+        self.io.write(FileTable.END_INDEX.to_bytes(4, 'little'))
 
     def read_index(self, index: int) -> int:
         index = index*4
